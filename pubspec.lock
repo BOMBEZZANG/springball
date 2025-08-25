@@ -85,10 +85,10 @@ packages:
     dependency: "direct main"
     description:
       name: flame_forge2d
-      sha256: "3d0d694c79a6cea624db4a995cb8189509b06ac9d4366584d07dfd99aecbb30f"
+      sha256: "4ed66a493146f7ec6bd8458527a6fdd7010e36142db3b66f55e7fce6e9186cb2"
       url: "https://pub.dev"
     source: hosted
-    version: "0.16.0+5"
+    version: "0.18.3+1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -116,10 +116,10 @@ packages:
     dependency: transitive
     description:
       name: forge2d
-      sha256: a16bee7a5bdf3538ef4a51ae9b6befb39872d3518b653fc7b8756ef49f7fcf96
+      sha256: "6aac85f1cb9f7e3720bff5d6884ff2e1bcb74402e6fe271599b7b1f65574f5e2"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.2"
+    version: "0.13.1"
   leak_tracker:
     dependency: transitive
     description:
@@ -390,5 +390,5 @@ packages:
     source: hosted
     version: "1.1.0"
 sdks:
-  dart: ">=3.7.0 <4.0.0"
+  dart: "3.7.2"
   flutter: ">=3.27.1"

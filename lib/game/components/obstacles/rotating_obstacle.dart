@@ -6,7 +6,7 @@ import '../../config/game_config.dart';
 import '../../../models/level_data.dart';
 
 class RotatingObstacle extends BaseObstacle {
-  double _autoRotationSpeed = GameConfig.rotatingObstacleSpeed;
+  final double _autoRotationSpeed = GameConfig.rotatingObstacleSpeed;
 
   RotatingObstacle({required Size size, Vector2? position})
       : super(
@@ -36,12 +36,12 @@ class RotatingObstacle extends BaseObstacle {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
     textPainter.paint(
-      canvas, 
+      canvas,
       Offset(
-        -textPainter.width / 2, 
+        -textPainter.width / 2,
         -textPainter.height / 2,
       ),
     );

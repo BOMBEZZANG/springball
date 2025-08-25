@@ -30,24 +30,24 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
   void updateSpecialBehavior(double dt) {
     _attractionTimer += dt;
     _isAttracting = false;
-    
+
     // Update magnetic field rings
     for (final ring in _fieldRings) {
       ring.update(dt);
     }
-    
+
     // Find nearby balls and apply magnetic force
     final balls = parent?.children.whereType<Ball>() ?? [];
-    
+
     for (final ball in balls) {
       if (ball.isActive) {
         final distance = (ball.body.position - body.position).length;
         final scaledRange = magneticRange / 10; // Scale for Box2D
-        
+
         if (distance < scaledRange) {
           _isAttracting = true;
           applyMagneticForce(ball);
-          
+
           // Play attraction sound occasionally
           if (_attractionTimer > 0.5) {
             AudioManager().playMagnetAttract();
@@ -65,18 +65,18 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
       ..color = primaryColor.withOpacity(0.15)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    
+
     for (final ring in _fieldRings) {
       final alpha = _isAttracting ? 0.3 : 0.15;
       final dynamicAlpha = alpha + sin(ring.phase) * 0.1;
-      
+
       fieldPaint.color = primaryColor.withOpacity(dynamicAlpha);
       canvas.drawCircle(Offset.zero, ring.currentRadius, fieldPaint);
     }
-    
+
     // Core magnetic effect
     _renderMagneticCore(canvas);
-    
+
     // Attraction lines if attracting
     if (_isAttracting) {
       _renderAttractionLines(canvas);
@@ -87,16 +87,16 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
     final corePaint = Paint()
       ..color = primaryColor.withOpacity(0.6)
       ..style = PaintingStyle.fill;
-    
+
     // Pulsing magnetic core
     final coreRadius = 8 + sin(pulseEffect * 4) * 2;
     canvas.drawCircle(Offset.zero, coreRadius, corePaint);
-    
+
     // Inner glow
     final glowPaint = Paint()
       ..color = Colors.white.withOpacity(0.4)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(Offset.zero, coreRadius * 0.6, glowPaint);
   }
 
@@ -104,19 +104,19 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
     final linePaint = Paint()
       ..color = primaryColor.withOpacity(0.4)
       ..strokeWidth = 1.5;
-    
+
     // Draw magnetic field lines
     const numLines = 8;
     for (int i = 0; i < numLines; i++) {
       final angle = (i * 2 * pi / numLines) + pulseEffect;
-      final startRadius = 15.0;
+      const startRadius = 15.0;
       final endRadius = magneticRange / 3;
-      
+
       final startX = cos(angle) * startRadius;
       final startY = sin(angle) * startRadius;
       final endX = cos(angle) * endRadius;
       final endY = sin(angle) * endRadius;
-      
+
       canvas.drawLine(
         Offset(startX, startY),
         Offset(endX, endY),
@@ -143,12 +143,12 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
     textPainter.paint(
-      canvas, 
+      canvas,
       Offset(
-        -textPainter.width / 2, 
+        -textPainter.width / 2,
         -textPainter.height / 2,
       ),
     );
@@ -156,13 +156,13 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
 
   @override
   Color getBorderColor() => const Color(0xFF0D47A1);
-  
+
   @override
   List<Color> getGradientColors() => [
-    primaryColor,
-    const Color(0xFF1976D2),
-    const Color(0xFF2196F3),
-  ];
+        primaryColor,
+        const Color(0xFF1976D2),
+        const Color(0xFF2196F3),
+      ];
 
   @override
   void onBallHit() {
@@ -175,10 +175,10 @@ class MagnetObstacle extends BaseObstacle with MagneticObstacle {
 
   @override
   Map<String, dynamic> getSpecialProperties() => {
-    'magneticRange': magneticRange,
-    'magneticStrength': magneticStrength,
-    'isAttracting': _isAttracting,
-  };
+        'magneticRange': magneticRange,
+        'magneticStrength': magneticStrength,
+        'isAttracting': _isAttracting,
+      };
 }
 
 /// Magnetic field ring for visual effects
@@ -187,8 +187,8 @@ class MagneticField {
   final double speed;
   double phase = 0;
   double pulseStrength = 0;
-  
-  MagneticField({required double radius, required this.speed}) 
+
+  MagneticField({required double radius, required this.speed})
       : baseRadius = radius;
 
   double get currentRadius => baseRadius + sin(phase) * 5 + pulseStrength;
@@ -196,7 +196,7 @@ class MagneticField {
   void update(double dt) {
     phase += speed * dt;
     if (phase > 2 * pi) phase -= 2 * pi;
-    
+
     // Decay pulse strength
     if (pulseStrength > 0) {
       pulseStrength -= dt * 20; // Decay rate

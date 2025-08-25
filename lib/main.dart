@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
-import 'game/physics_ball_game.dart';
 import 'game/screens/game_screen.dart';
 import 'game/managers/game_state_manager.dart';
 

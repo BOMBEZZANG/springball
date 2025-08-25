@@ -1,19 +1,19 @@
-name: physics_ball_drop
+name: springball
 description: A hyper-casual physics puzzle game where players drop a ball and guide it to reach a goal by rotating obstacles.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '3.7.2'
   flutter: ">=3.13.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  flame: ^1.11.0
-  flame_forge2d: ^0.16.0
-  provider: ^6.0.5
-  shared_preferences: ^2.2.0
+  flame: ^1.18.0
+  flame_forge2d: ^0.18.3+1
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
   cupertino_icons: ^1.0.8
 
 dev_dependencies:

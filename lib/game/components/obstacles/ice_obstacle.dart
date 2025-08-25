@@ -21,7 +21,7 @@ class IceObstacle extends BaseObstacle {
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: const Offset(3, 3),
@@ -30,9 +30,9 @@ class IceObstacle extends BaseObstacle {
       ),
       shadowPaint,
     );
-    
+
     // Ice gradient effect
-    final iceGradient = LinearGradient(
+    const iceGradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
@@ -41,7 +41,7 @@ class IceObstacle extends BaseObstacle {
         const Color(0xFFB3E5FC),
       ],
     );
-    
+
     final bodyPaint = Paint()
       ..shader = iceGradient.createShader(
         Rect.fromCenter(
@@ -50,7 +50,7 @@ class IceObstacle extends BaseObstacle {
           height: obstacleSize.height,
         ),
       );
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset.zero,
@@ -59,19 +59,19 @@ class IceObstacle extends BaseObstacle {
       ),
       bodyPaint,
     );
-    
+
     // Ice crystals pattern
     final crystalPaint = Paint()
       ..color = Colors.white.withOpacity(0.6)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
-    
+
     // Draw some crystalline patterns
     for (int i = -1; i <= 1; i++) {
       for (int j = -1; j <= 1; j++) {
         final centerX = i * 20.0;
         final centerY = j * 10.0;
-        
+
         // Draw a simple crystal pattern
         canvas.drawLine(
           Offset(centerX - 5, centerY),
@@ -95,13 +95,13 @@ class IceObstacle extends BaseObstacle {
         );
       }
     }
-    
+
     // Border
     final borderPaint = Paint()
       ..color = const Color(0xFF81D4FA)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset.zero,
@@ -112,15 +112,6 @@ class IceObstacle extends BaseObstacle {
     );
   }
 
-  @override
-  void beginContact(Object other, Contact contact) {
-    super.beginContact(other, contact);
-    
-    if (other is Ball) {
-      other.setOnIce(true);
-    }
-  }
-
   /// Called when ball slides on ice (reduced friction)
   void onBallSlide() {
     pulseEffect = 1.0; // Visual feedback
@@ -128,16 +119,16 @@ class IceObstacle extends BaseObstacle {
 
   @override
   double getFriction() => 0.1; // Very low friction for ice
-  
+
   @override
   Color getBorderColor() => const Color(0xFF0277BD);
-  
+
   @override
   List<Color> getGradientColors() => [
-    primaryColor,
-    const Color(0xFF29B6F6),
-    const Color(0xFF03A9F4),
-  ];
+        primaryColor,
+        const Color(0xFF29B6F6),
+        const Color(0xFF03A9F4),
+      ];
 
   @override
   void renderIcon(Canvas canvas) {
@@ -148,12 +139,12 @@ class IceObstacle extends BaseObstacle {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
     textPainter.paint(
-      canvas, 
+      canvas,
       Offset(
-        -textPainter.width / 2, 
+        -textPainter.width / 2,
         -textPainter.height / 2,
       ),
     );

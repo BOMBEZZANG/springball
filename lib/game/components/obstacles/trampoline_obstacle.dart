@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:flame_forge2d/flame_forge2d.dart';
 import 'base_obstacle.dart';
 import '../../config/game_config.dart';
 import '../../../models/level_data.dart';
@@ -30,12 +30,12 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
   void renderObstacleBody(Canvas canvas) {
     // Bouncy effect - modify height based on bounce strength
     final bounceOffset = _bounceStrength * 3;
-    
+
     // Shadow
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset(3, 3 - bounceOffset),
@@ -44,14 +44,14 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
       ),
       shadowPaint,
     );
-    
+
     // Trampoline body with spring pattern
     final gradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: getGradientColors(),
     );
-    
+
     final bodyPaint = Paint()
       ..shader = gradient.createShader(
         Rect.fromCenter(
@@ -60,7 +60,7 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
           height: obstacleSize.height,
         ),
       );
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset(0, -bounceOffset),
@@ -69,16 +69,16 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
       ),
       bodyPaint,
     );
-    
+
     // Spring pattern
     _renderSpringPattern(canvas, bounceOffset);
-    
+
     // Border
     final borderPaint = Paint()
       ..color = getBorderColor()
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset(0, -bounceOffset),
@@ -94,15 +94,17 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
       ..color = const Color(0xFF00ACC1)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    
+
     // Draw spring zigzag pattern
-    for (double x = -obstacleSize.width/2 + 15; x < obstacleSize.width/2; x += 25) {
+    for (double x = -obstacleSize.width / 2 + 15;
+        x < obstacleSize.width / 2;
+        x += 25) {
       final path = Path();
-      path.moveTo(x, -obstacleSize.height/2 - bounceOffset);
+      path.moveTo(x, -obstacleSize.height / 2 - bounceOffset);
       path.lineTo(x + 5, -bounceOffset);
-      path.lineTo(x + 10, -obstacleSize.height/2 - bounceOffset);
-      path.lineTo(x + 15, obstacleSize.height/2 - bounceOffset);
-      path.lineTo(x + 20, -obstacleSize.height/2 - bounceOffset);
+      path.lineTo(x + 10, -obstacleSize.height / 2 - bounceOffset);
+      path.lineTo(x + 15, obstacleSize.height / 2 - bounceOffset);
+      path.lineTo(x + 20, -obstacleSize.height / 2 - bounceOffset);
       canvas.drawPath(path, springPaint);
     }
   }
@@ -116,12 +118,12 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
     textPainter.paint(
-      canvas, 
+      canvas,
       Offset(
-        -textPainter.width / 2, 
+        -textPainter.width / 2,
         -textPainter.height / 2,
       ),
     );
@@ -140,13 +142,13 @@ class TrampolineObstacle extends BaseObstacle with PhysicsAffectingObstacle {
 
   @override
   Color getBorderColor() => const Color(0xFF006064);
-  
+
   @override
   List<Color> getGradientColors() => [
-    primaryColor,
-    const Color(0xFF26C6DA),
-    const Color(0xFF00BCD4),
-  ];
+        primaryColor,
+        const Color(0xFF26C6DA),
+        const Color(0xFF00BCD4),
+      ];
 
   @override
   double getRestitution() => GameConfig.trampolineBounceMultiplier;

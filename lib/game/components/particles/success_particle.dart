@@ -2,24 +2,24 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-class SuccessParticle extends Component {
+class SuccessParticle extends PositionComponent {
   late Vector2 velocity;
   late double life;
   late double maxLife;
   late Color color;
-  late double size;
+  late double particleSize;
   
   SuccessParticle({
-    required Vector2 position,
+    required Vector2 initialPosition,
     required this.color,
   }) {
-    this.position = position;
+    position = initialPosition;
     velocity = Vector2(
       (Random().nextDouble() - 0.5) * 200,
       -Random().nextDouble() * 300 - 100,
     );
     maxLife = life = 1.0 + Random().nextDouble();
-    size = Random().nextDouble() * 8 + 4;
+    particleSize = Random().nextDouble() * 8 + 4;
   }
 
   @override
@@ -38,7 +38,7 @@ class SuccessParticle extends Component {
   @override
   void render(Canvas canvas) {
     final alpha = (life / maxLife).clamp(0.0, 1.0);
-    final currentSize = size * alpha;
+    final currentSize = particleSize * alpha;
     
     final paint = Paint()
       ..color = color.withOpacity(alpha)

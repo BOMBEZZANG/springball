@@ -4,7 +4,6 @@ import 'dart:math';
 import '../../config/game_config.dart';
 import '../../../models/level_data.dart';
 import '../../systems/audio_manager.dart';
-import 'package:flutter/services.dart';
 
 /// Abstract base class for all obstacles with common properties and behavior
 abstract class BaseObstacle extends BodyComponent {
@@ -12,13 +11,13 @@ abstract class BaseObstacle extends BodyComponent {
   final Size obstacleSize;
   final bool rotatable;
   final Color primaryColor;
-  
+
   // Common state
   double targetAngle = 0;
   double currentAngle = 0;
   double pulseEffect = 0;
   late PolygonShape shape;
-  
+
   BaseObstacle({
     required this.type,
     required this.obstacleSize,
@@ -67,9 +66,9 @@ abstract class BaseObstacle extends BodyComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    
+
     pulseEffect += dt;
-    
+
     // Handle rotation animation
     if (rotatable && !isAutoRotating()) {
       final angleDiff = targetAngle - currentAngle;
@@ -78,33 +77,33 @@ abstract class BaseObstacle extends BodyComponent {
         body.setTransform(body.position, currentAngle);
       }
     }
-    
+
     // Auto-rotation for specific obstacles
     if (isAutoRotating()) {
       currentAngle += getAutoRotationSpeed() * dt;
       body.setTransform(body.position, currentAngle);
     }
-    
+
     updateSpecialBehavior(dt);
   }
 
   @override
   void render(Canvas canvas) {
     final position = body.position * 10; // Scale for rendering
-    
+
     canvas.save();
     canvas.translate(position.x, position.y);
     canvas.rotate(body.angle);
-    
+
     // Render special effects first (glow, particles, etc.)
     renderSpecialEffects(canvas);
-    
+
     // Render the main obstacle body
     renderObstacleBody(canvas);
-    
+
     // Render obstacle icon/symbol
     renderIcon(canvas);
-    
+
     canvas.restore();
   }
 
@@ -112,10 +111,10 @@ abstract class BaseObstacle extends BodyComponent {
   void renderObstacleBody(Canvas canvas) {
     // Shadow
     _renderShadow(canvas);
-    
+
     // Main body with gradient
     _renderMainBody(canvas);
-    
+
     // Border
     _renderBorder(canvas);
   }
@@ -124,7 +123,7 @@ abstract class BaseObstacle extends BodyComponent {
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: const Offset(3, 3),
@@ -141,7 +140,7 @@ abstract class BaseObstacle extends BodyComponent {
       end: Alignment.bottomRight,
       colors: getGradientColors(),
     );
-    
+
     final bodyPaint = Paint()
       ..shader = gradient.createShader(
         Rect.fromCenter(
@@ -150,7 +149,7 @@ abstract class BaseObstacle extends BodyComponent {
           height: obstacleSize.height,
         ),
       );
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset.zero,
@@ -166,7 +165,7 @@ abstract class BaseObstacle extends BodyComponent {
       ..color = getBorderColor()
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    
+
     canvas.drawRect(
       Rect.fromCenter(
         center: Offset.zero,
@@ -213,7 +212,8 @@ abstract class BaseObstacle extends BodyComponent {
   void renderIcon(Canvas canvas) {}
 
   // Virtual methods with default implementations (can be overridden)
-  List<Color> getGradientColors() => [primaryColor, primaryColor.withOpacity(0.7)];
+  List<Color> getGradientColors() =>
+      [primaryColor, primaryColor.withOpacity(0.7)];
   Color getBorderColor() => primaryColor.withOpacity(0.8);
   double getFriction() => 0.7;
   double getRestitution() => 0.8;
@@ -223,7 +223,7 @@ abstract class BaseObstacle extends BodyComponent {
 
   // Utility methods
   Vector2 get worldPosition => body.position * 10;
-  
+
   void updatePosition(Vector2 newPosition) {
     body.setTransform(newPosition / 10, body.angle);
   }
@@ -248,12 +248,13 @@ mixin MagneticObstacle on BaseObstacle {
     final ballPos = ball.body.position;
     final magnetPos = body.position;
     final distance = (ballPos - magnetPos).length;
-    
-    if (distance < magneticRange / 10) { // Scale for Box2D
+
+    if (distance < magneticRange / 10) {
+      // Scale for Box2D
       final direction = (magnetPos - ballPos).normalized();
       final force = (1 - distance / (magneticRange / 10)) * magneticStrength;
       final magnetForce = direction * force;
-      
+
       ball.body.applyForce(magnetForce);
     }
   }

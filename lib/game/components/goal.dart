@@ -9,7 +9,7 @@ class Goal extends BodyComponent {
   double _pulseTime = 0;
   bool _isCompleted = false;
   late CircleShape shape;
-  
+
   Goal({Vector2? initialPosition}) : super() {
     renderBody = false; // Custom rendering
     if (initialPosition != null) {
@@ -53,16 +53,16 @@ class Goal extends BodyComponent {
     final position = body.position * 10; // Scale for rendering
     final center = Offset(position.x, position.y);
     final pulseSize = sin(_pulseTime * 3) * 5;
-    
+
     // Outer glow effect
     _renderGlowEffect(canvas, center, pulseSize);
-    
+
     // Main goal body
     _renderGoalBody(canvas, center, pulseSize);
-    
+
     // Border
     _renderBorder(canvas, center, pulseSize);
-    
+
     // Star icon
     _renderStar(canvas, center, 12 + pulseSize / 2);
   }
@@ -71,7 +71,7 @@ class Goal extends BodyComponent {
     final glowPaint = Paint()
       ..color = GameConfig.successColor.withOpacity(0.3)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(
       center,
       GameConfig.goalRadius + pulseSize + 10,
@@ -80,13 +80,13 @@ class Goal extends BodyComponent {
   }
 
   void _renderGoalBody(Canvas canvas, Offset center, double pulseSize) {
-    final gradient = RadialGradient(
+    const gradient = RadialGradient(
       colors: [
         const Color(0xFF81C784),
         GameConfig.successColor,
       ],
     );
-    
+
     final goalPaint = Paint()
       ..shader = gradient.createShader(
         Rect.fromCircle(
@@ -94,7 +94,7 @@ class Goal extends BodyComponent {
           radius: GameConfig.goalRadius + pulseSize,
         ),
       );
-    
+
     canvas.drawCircle(
       center,
       GameConfig.goalRadius + pulseSize,
@@ -107,7 +107,7 @@ class Goal extends BodyComponent {
       ..color = const Color(0xFF2E7D32)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-    
+
     canvas.drawCircle(
       center,
       GameConfig.goalRadius + pulseSize,
@@ -123,12 +123,12 @@ class Goal extends BodyComponent {
     final path = Path();
     const numPoints = 5;
     const angle = 2 * pi / numPoints;
-    
+
     for (int i = 0; i < numPoints * 2; i++) {
       final radius = (i % 2 == 0) ? size : size * 0.5;
       final x = center.dx + radius * cos(i * angle / 2 - pi / 2);
       final y = center.dy + radius * sin(i * angle / 2 - pi / 2);
-      
+
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -136,7 +136,7 @@ class Goal extends BodyComponent {
       }
     }
     path.close();
-    
+
     canvas.drawPath(path, paint);
   }
 

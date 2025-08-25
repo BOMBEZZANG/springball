@@ -5,12 +5,12 @@ import '../../models/level_data.dart';
 /// Singleton LevelManager for centralized level management
 class LevelManager {
   static LevelManager? _instance;
-  
+
   factory LevelManager() {
     _instance ??= LevelManager._internal();
     return _instance!;
   }
-  
+
   LevelManager._internal() {
     _initialize();
   }
@@ -29,8 +29,9 @@ class LevelManager {
 
   void _initialize() {
     if (_initialized) return;
-    
-    debugPrint('LevelManager initialized with ${_allLevels.length} predefined levels');
+
+    debugPrint(
+        'LevelManager initialized with ${_allLevels.length} predefined levels');
     loadLevel(1); // Load first level by default
     _initialized = true;
   }
@@ -44,7 +45,7 @@ class LevelManager {
 
     _currentLevel = levelId;
     _currentLevelData = LevelConfig.getLevel(levelId);
-    
+
     debugPrint('Loaded level $_currentLevel');
     if (isCustomLevel(levelId)) {
       debugPrint('  -> Custom generated level');
@@ -76,7 +77,7 @@ class LevelManager {
       debugPrint('Cannot jump to level $targetLevel: Invalid level number');
       return false;
     }
-    
+
     // For custom levels, we don't restrict access
     loadLevel(targetLevel);
     return true;
@@ -105,11 +106,11 @@ class LevelManager {
 
   /// Get level difficulty rating (1-5 stars)
   int getLevelDifficulty(int levelId) {
-    if (levelId <= 2) return 1;      // Tutorial levels
-    if (levelId <= 5) return 2;      // Basic levels
-    if (levelId <= 8) return 3;      // Intermediate levels
-    if (levelId <= 12) return 4;     // Advanced levels
-    
+    if (levelId <= 2) return 1; // Tutorial levels
+    if (levelId <= 5) return 2; // Basic levels
+    if (levelId <= 8) return 3; // Intermediate levels
+    if (levelId <= 12) return 4; // Advanced levels
+
     // Custom levels: increase difficulty gradually
     final customLevelIndex = levelId - _allLevels.length;
     return (3 + (customLevelIndex ~/ 5)).clamp(3, 5);
@@ -124,9 +125,10 @@ class LevelManager {
 
   /// Get level statistics
   LevelStats getLevelStats(int levelId) {
-    final levelData = levelId == _currentLevel ? 
-        _currentLevelData : LevelConfig.getLevel(levelId);
-    
+    final levelData = levelId == _currentLevel
+        ? _currentLevelData
+        : LevelConfig.getLevel(levelId);
+
     return LevelStats(
       levelId: levelId,
       obstacleCount: levelData?.obstacles.length ?? 0,
@@ -140,38 +142,40 @@ class LevelManager {
   /// Validate level data integrity
   bool validateCurrentLevel() {
     if (_currentLevelData == null) return false;
-    
+
     // Check if goal position is valid
     final goal = _currentLevelData!.goal;
     if (goal.dx < 0 || goal.dy < 0) return false;
-    
+
     // Check if ball start position is valid
     final ballStart = _currentLevelData!.ballStart;
     if (ballStart.dx < 0 || ballStart.dy < 0) return false;
-    
+
     // Check if obstacles have valid positions
     for (final obstacle in _currentLevelData!.obstacles) {
       if (obstacle.position.dx < 0 || obstacle.position.dy < 0) return false;
       if (obstacle.size.width <= 0 || obstacle.size.height <= 0) return false;
     }
-    
+
     return true;
   }
 
   /// Get all available levels info
   List<LevelStats> getAllLevelsInfo({int maxCustomLevels = 20}) {
     final allStats = <LevelStats>[];
-    
+
     // Add predefined levels
     for (int i = 1; i <= _allLevels.length; i++) {
       allStats.add(getLevelStats(i));
     }
-    
+
     // Add some custom levels for preview
-    for (int i = _allLevels.length + 1; i <= _allLevels.length + maxCustomLevels; i++) {
+    for (int i = _allLevels.length + 1;
+        i <= _allLevels.length + maxCustomLevels;
+        i++) {
       allStats.add(getLevelStats(i));
     }
-    
+
     return allStats;
   }
 
@@ -201,7 +205,7 @@ class LevelStats {
 
   @override
   String toString() {
-    return 'Level $levelId: ${obstacleCount} obstacles, par $par, '
-           '${difficulty} stars, ~${estimatedTime}s ${isCustom ? '(Custom)' : ''}';
+    return 'Level $levelId: $obstacleCount obstacles, par $par, '
+        '$difficulty stars, ~${estimatedTime}s ${isCustom ? '(Custom)' : ''}';
   }
 }
