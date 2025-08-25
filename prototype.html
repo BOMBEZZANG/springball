@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Ball Drop - Advanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            color: white;
+            pointer-events: none;
+        }
+
+        #levelDisplay {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #scoreDisplay {
+            font-size: 18px;
+            margin-top: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #dropButton {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255,107,107,0.4);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        #dropButton:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 15px 40px rgba(255,107,107,0.5);
+        }
+
+        #dropButton:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        #dropButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success-effect {
+            position: absolute;
+            font-size: 60px;
+            font-weight: bold;
+            color: #4CAF50;
+            animation: successPop 1s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .fail-effect {
+            position: absolute;
+            font-size: 50px;
+            font-weight: bold;
+            color: #FF5252;
+            animation: successPop 1s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes particleFly {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        #resetButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 25px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        #resetButton:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        #instruction {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            right: 20px;
+            color: white;
+            font-size: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="levelDisplay">Level 1</div>
+            <div id="scoreDisplay">Score: 0</div>
+            <button id="resetButton">Reset</button>
+        </div>
+        <div id="legend">
+            <div class="legend-item">🌀 회전</div>
+            <div class="legend-item">🧲 자석</div>
+            <div class="legend-item">🌊 트램펄린</div>
+            <div class="legend-item">❄️ 얼음</div>
+            <div class="legend-item">🔥 용암</div>
+        </div>
+        <div id="instruction">클릭해서 초록 장애물 회전</div>
+        <button id="dropButton">DROP!</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 400;
+        canvas.height = 600;
+
+        let currentLevel = 1;
+        let score = 0;
+        let ball = null;
+        let goal = null;
+        let obstacles = [];
+        let particles = [];
+        let isDropping = false;
+        let fireParticles = [];
+
+        class Ball {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = 15;
+                this.gravity = 0.5;
+                this.bounce = 0.7;
+                this.friction = 0.99;
+                this.trail = [];
+                this.onIce = false;
+            }
+
+            update() {
+                // 얼음 위에서는 마찰력 제거
+                const currentFriction = this.onIce ? 1.0 : this.friction;
+                
+                this.vy += this.gravity;
+                this.vx *= currentFriction;
+                this.vy *= currentFriction;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 트레일 효과
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 10) {
+                    this.trail.shift();
+                }
+
+                // 벽 충돌
+                if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) {
+                    this.x = this.x - this.radius <= 0 ? this.radius : canvas.width - this.radius;
+                    this.vx = -this.vx * this.bounce;
+                }
+
+                if (this.y - this.radius <= 0) {
+                    this.y = this.radius;
+                    this.vy = -this.vy * this.bounce;
+                }
+
+                // 바닥에 닿으면 실패
+                if (this.y + this.radius >= canvas.height) {
+                    return false;
+                }
+
+                this.onIce = false; // 매 프레임 리셋
+                return true;
+            }
+
+            draw() {
+                // 트레일 그리기
+                this.trail.forEach((point, index) => {
+                    ctx.globalAlpha = index / this.trail.length * 0.5;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, this.radius * (index / this.trail.length), 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.globalAlpha = 1;
+
+                // 공 그리기
+                const gradient = ctx.createRadialGradient(this.x - 5, this.y - 5, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, '#FFD700');
+                gradient.addColorStop(1, '#FFA500');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FF8C00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 얼음 위에 있을 때 효과
+                if (this.onIce) {
+                    ctx.strokeStyle = '#00BCD4';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            checkCollisionWithObstacle(obstacle) {
+                const dx = this.x - obstacle.x;
+                const dy = this.y - obstacle.y;
+                
+                // 회전된 좌표계로 변환
+                const cos = Math.cos(-obstacle.angle);
+                const sin = Math.sin(-obstacle.angle);
+                const localX = dx * cos - dy * sin;
+                const localY = dx * sin + dy * cos;
+                
+                // 사각형 충돌 검사
+                const halfWidth = obstacle.width / 2;
+                const halfHeight = obstacle.height / 2;
+                
+                let closestX = Math.max(-halfWidth, Math.min(localX, halfWidth));
+                let closestY = Math.max(-halfHeight, Math.min(localY, halfHeight));
+                
+                const distX = localX - closestX;
+                const distY = localY - closestY;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+                
+                if (distance < this.radius) {
+                    // 특수 장애물 효과
+                    if (obstacle.type === 'lava') {
+                        // 용암: 즉시 실패
+                        return 'fail';
+                    }
+
+                    // 충돌 반응
+                    const normalX = distX / distance;
+                    const normalY = distY / distance;
+                    
+                    // 월드 좌표계로 다시 변환
+                    const worldNormalX = normalX * cos + normalY * sin;
+                    const worldNormalY = -normalX * sin + normalY * cos;
+                    
+                    // 특수 효과 적용
+                    let bounceMultiplier = this.bounce;
+                    
+                    if (obstacle.type === 'trampoline') {
+                        // 트램펄린: 강한 반발력
+                        bounceMultiplier = 1.8;
+                        this.vy = -Math.abs(this.vy) * 1.5; // 위로 강하게 튕김
+                    } else if (obstacle.type === 'ice') {
+                        // 얼음: 마찰력 제거
+                        this.onIce = true;
+                        bounceMultiplier = 0.95; // 거의 탄성 충돌
+                    }
+                    
+                    // 반사
+                    const dot = this.vx * worldNormalX + this.vy * worldNormalY;
+                    this.vx -= 2 * dot * worldNormalX;
+                    this.vy -= 2 * dot * worldNormalY;
+                    
+                    // 위치 조정
+                    const overlap = this.radius - distance;
+                    this.x += worldNormalX * overlap;
+                    this.y += worldNormalY * overlap;
+                    
+                    // 속도 감쇠
+                    this.vx *= bounceMultiplier;
+                    this.vy *= bounceMultiplier;
+                }
+                
+                return 'normal';
+            }
+        }
+
+        class Obstacle {
+            constructor(x, y, width, height, type = 'normal') {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.angle = 0;
+                this.type = type;
+                this.targetAngle = 0;
+                this.rotationSpeed = 0;
+                this.pulseEffect = 0;
+                
+                // 타입별 설정
+                switch(type) {
+                    case 'normal':
+                        this.color = '#4CAF50';
+                        this.rotatable = true;
+                        break;
+                    case 'static':
+                        this.color = '#FF6B6B';
+                        this.rotatable = false;
+                        break;
+                    case 'rotating':
+                        this.color = '#9C27B0';
+                        this.rotatable = false;
+                        this.rotationSpeed = 0.02;
+                        break;
+                    case 'magnet':
+                        this.color = '#2196F3';
+                        this.rotatable = true;
+                        this.magnetForce = 100;
+                        break;
+                    case 'trampoline':
+                        this.color = '#00BCD4';
+                        this.rotatable = true;
+                        break;
+                    case 'ice':
+                        this.color = '#E0F7FA';
+                        this.rotatable = true;
+                        break;
+                    case 'lava':
+                        this.color = '#FF5722';
+                        this.rotatable = false;
+                        break;
+                }
+            }
+
+            update() {
+                // 자동 회전
+                if (this.type === 'rotating') {
+                    this.angle += this.rotationSpeed;
+                }
+                
+                // 수동 회전
+                if (this.rotatable && this.type !== 'rotating') {
+                    const diff = this.targetAngle - this.angle;
+                    this.angle += diff * 0.2;
+                }
+
+                // 펄스 효과
+                this.pulseEffect += 0.05;
+
+                // 자석 효과
+                if (this.type === 'magnet' && ball) {
+                    const dx = ball.x - this.x;
+                    const dy = ball.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < this.magnetForce) {
+                        const force = (1 - distance / this.magnetForce) * 0.3;
+                        ball.vx -= (dx / distance) * force;
+                        ball.vy -= (dy / distance) * force;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                // 특수 효과 그리기
+                if (this.type === 'magnet') {
+                    // 자기장 효과
+                    ctx.globalAlpha = 0.2;
+                    ctx.strokeStyle = '#2196F3';
+                    ctx.lineWidth = 2;
+                    for (let i = 1; i <= 3; i++) {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 30 * i + Math.sin(this.pulseEffect) * 5, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    ctx.globalAlpha = 1;
+                }
+
+                if (this.type === 'lava') {
+                    // 용암 글로우 효과
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillStyle = '#FF5722';
+                    const glowSize = 10 + Math.sin(this.pulseEffect * 2) * 5;
+                    ctx.fillRect(-this.width/2 - glowSize, -this.height/2 - glowSize, 
+                                this.width + glowSize * 2, this.height + glowSize * 2);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // 그림자
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(-this.width/2 + 5, -this.height/2 + 5, this.width, this.height);
+                
+                // 장애물 본체
+                if (this.type === 'ice') {
+                    // 얼음 효과
+                    const gradient = ctx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
+                    gradient.addColorStop(0, '#B3E5FC');
+                    gradient.addColorStop(0.5, '#E1F5FE');
+                    gradient.addColorStop(1, '#B3E5FC');
+                    ctx.fillStyle = gradient;
+                } else if (this.type === 'trampoline') {
+                    // 트램펄린 효과
+                    const bounce = Math.sin(this.pulseEffect * 3) * 2;
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(-this.width/2, -this.height/2 - bounce, this.width, this.height);
+                    
+                    // 스프링 무늬
+                    ctx.strokeStyle = '#00ACC1';
+                    ctx.lineWidth = 2;
+                    for (let i = -this.width/2 + 10; i < this.width/2; i += 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, -this.height/2);
+                        ctx.lineTo(i + 10, this.height/2);
+                        ctx.stroke();
+                    }
+                } else {
+                    const gradient = ctx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, this.type === 'lava' ? '#D32F2F' : 
+                                            this.type === 'magnet' ? '#1976D2' : 
+                                            this.color);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
+                
+                if (this.type !== 'ice' && this.type !== 'trampoline') {
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
+                
+                // 테두리
+                ctx.strokeStyle = this.type === 'ice' ? '#81D4FA' : 
+                                 this.type === 'lava' ? '#BF360C' :
+                                 this.type === 'magnet' ? '#0D47A1' :
+                                 this.type === 'trampoline' ? '#006064' :
+                                 this.rotatable ? '#1B5E20' : '#8B0000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                // 아이콘 그리기
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (this.type === 'rotating') {
+                    ctx.fillText('🌀', 0, 0);
+                } else if (this.type === 'magnet') {
+                    ctx.fillText('🧲', 0, 0);
+                } else if (this.type === 'trampoline') {
+                    ctx.fillText('🌊', 0, 0);
+                } else if (this.type === 'ice') {
+                    ctx.fillText('❄️', 0, 0);
+                } else if (this.type === 'lava') {
+                    ctx.fillText('🔥', 0, 0);
+                }
+                
+                ctx.restore();
+            }
+
+            isClicked(x, y) {
+                if (!this.rotatable) return false;
+                const dx = x - this.x;
+                const dy = y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < Math.max(this.width, this.height) / 2 + 20;
+            }
+
+            rotate() {
+                if (this.rotatable) {
+                    this.targetAngle += Math.PI / 4;
+                }
+            }
+        }
+
+        class Goal {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 30;
+                this.pulse = 0;
+            }
+
+            update() {
+                this.pulse += 0.05;
+            }
+
+            draw() {
+                const pulseSize = Math.sin(this.pulse) * 5;
+                
+                // 빛나는 효과
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#4CAF50';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + pulseSize + 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.globalAlpha = 1;
+                
+                // 목표 지점
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, '#81C784');
+                gradient.addColorStop(1, '#4CAF50');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + pulseSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#2E7D32';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // 별 아이콘
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('★', this.x, this.y);
+            }
+
+            checkCollision(ball) {
+                const dx = ball.x - this.x;
+                const dy = ball.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < this.radius + ball.radius;
+            }
+        }
+
+        // 화염 파티클 효과
+        class FireParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = -Math.random() * 3 - 1;
+                this.life = 1;
+                this.size = Math.random() * 5 + 3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1;
+                this.life -= 0.02;
+                return this.life > 0;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.life > 0.5 ? '#FF5722' : '#FFA726';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function createLevel(level) {
+            obstacles = [];
+            fireParticles = [];
+            
+            switch(level) {
+                case 1:
+                    obstacles.push(new Obstacle(200, 300, 150, 20, 'normal'));
+                    goal = new Goal(200, 450);
+                    break;
+                case 2:
+                    obstacles.push(new Obstacle(100, 250, 120, 20, 'trampoline'));
+                    obstacles.push(new Obstacle(300, 350, 120, 20, 'normal'));
+                    goal = new Goal(200, 500);
+                    break;
+                case 3:
+                    obstacles.push(new Obstacle(150, 200, 100, 20, 'rotating'));
+                    obstacles.push(new Obstacle(250, 300, 100, 20, 'ice'));
+                    obstacles.push(new Obstacle(200, 400, 150, 20, 'static'));
+                    goal = new Goal(350, 500);
+                    break;
+                case 4:
+                    obstacles.push(new Obstacle(100, 200, 80, 20, 'magnet'));
+                    obstacles.push(new Obstacle(300, 200, 80, 20, 'magnet'));
+                    obstacles.push(new Obstacle(200, 300, 120, 20, 'trampoline'));
+                    obstacles.push(new Obstacle(200, 400, 100, 20, 'lava'));
+                    goal = new Goal(200, 520);
+                    break;
+                case 5:
+                    obstacles.push(new Obstacle(150, 180, 100, 20, 'ice'));
+                    obstacles.push(new Obstacle(250, 260, 100, 20, 'rotating'));
+                    obstacles.push(new Obstacle(150, 340, 100, 20, 'magnet'));
+                    obstacles.push(new Obstacle(250, 420, 80, 20, 'lava'));
+                    obstacles.push(new Obstacle(100, 420, 80, 20, 'trampoline'));
+                    goal = new Goal(100, 520);
+                    break;
+                case 6:
+                    obstacles.push(new Obstacle(200, 150, 200, 20, 'rotating'));
+                    obstacles.push(new Obstacle(100, 250, 80, 20, 'lava'));
+                    obstacles.push(new Obstacle(300, 250, 80, 20, 'lava'));
+                    obstacles.push(new Obstacle(200, 350, 150, 20, 'ice'));
+                    obstacles.push(new Obstacle(200, 450, 100, 20, 'trampoline'));
+                    goal = new Goal(200, 550);
+                    break;
+                default:
+                    // 랜덤 레벨 생성 (특수 장애물 포함)
+                    const types = ['normal', 'rotating', 'magnet', 'trampoline', 'ice', 'lava', 'static'];
+                    const numObstacles = 3 + Math.floor(level / 2);
+                    for (let i = 0; i < numObstacles; i++) {
+                        const x = 50 + Math.random() * 300;
+                        const y = 150 + i * (350 / numObstacles);
+                        const width = 80 + Math.random() * 70;
+                        const type = types[Math.floor(Math.random() * types.length)];
+                        obstacles.push(new Obstacle(x, y, width, 20, type));
+                    }
+                    goal = new Goal(50 + Math.random() * 300, 500 + Math.random() * 50);
+                    break;
+            }
+        }
+
+        function createParticles(x, y, color = '#FFD700') {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.background = color;
+                particle.style.setProperty('--x', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.setProperty('--y', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.animation = 'particleFly 1s ease-out forwards';
+                document.getElementById('gameContainer').appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        function showSuccessEffect() {
+            const effect = document.createElement('div');
+            effect.className = 'success-effect';
+            effect.textContent = 'PERFECT!';
+            effect.style.left = '50%';
+            effect.style.top = '50%';
+            document.getElementById('gameContainer').appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        function showFailEffect() {
+            const effect = document.createElement('div');
+            effect.className = 'fail-effect';
+            effect.textContent = 'BURNED!';
+            effect.style.left = '50%';
+            effect.style.top = '50%';
+            document.getElementById('gameContainer').appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            score += 100 * currentLevel;
+            document.getElementById('levelDisplay').textContent = `Level ${currentLevel}`;
+            document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
+            
+            showSuccessEffect();
+            createParticles(goal.x, goal.y);
+            
+            setTimeout(() => {
+                ball = null;
+                createLevel(currentLevel);
+                isDropping = false;
+                document.getElementById('dropButton').disabled = false;
+            }, 1500);
+        }
+
+        function resetLevel() {
+            ball = null;
+            isDropping = false;
+            document.getElementById('dropButton').disabled = false;
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 배경 그라데이션
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGradient.addColorStop(0, '#1a237e');
+            bgGradient.addColorStop(1, '#3949ab');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 격자 패턴
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // 목표 지점 업데이트 및 그리기
+            if (goal) {
+                goal.update();
+                goal.draw();
+            }
+            
+            // 장애물 업데이트 및 그리기
+            obstacles.forEach(obstacle => {
+                obstacle.update();
+                obstacle.draw();
+                
+                // 용암 파티클 생성
+                if (obstacle.type === 'lava' && Math.random() < 0.1) {
+                    fireParticles.push(new FireParticle(
+                        obstacle.x + (Math.random() - 0.5) * obstacle.width,
+                        obstacle.y - obstacle.height / 2
+                    ));
+                }
+            });
+            
+            // 화염 파티클 업데이트
+            fireParticles = fireParticles.filter(particle => {
+                const alive = particle.update();
+                if (alive) particle.draw();
+                return alive;
+            });
+            
+            // 공 업데이트 및 그리기
+            if (ball) {
+                const isActive = ball.update();
+                
+                // 장애물과 충돌 체크
+                let failed = false;
+                obstacles.forEach(obstacle => {
+                    const result = ball.checkCollisionWithObstacle(obstacle);
+                    if (result === 'fail') {
+                        failed = true;
+                    }
+                });
+                
+                if (failed) {
+                    showFailEffect();
+                    createParticles(ball.x, ball.y, '#FF5722');
+                    resetLevel();
+                } else {
+                    ball.draw();
+                    
+                    // 목표 도달 체크
+                    if (goal && goal.checkCollision(ball)) {
+                        nextLevel();
+                    }
+                    
+                    // 실패 체크
+                    if (!isActive) {
+                        resetLevel();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 이벤트 리스너
+        document.getElementById('dropButton').addEventListener('click', () => {
+            if (!isDropping) {
+                ball = new Ball(200, 50);
+                isDropping = true;
+                document.getElementById('dropButton').disabled = true;
+            }
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            currentLevel = 1;
+            score = 0;
+            document.getElementById('levelDisplay').textContent = `Level ${currentLevel}`;
+            document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
+            createLevel(currentLevel);
+            resetLevel();
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            obstacles.forEach(obstacle => {
+                if (obstacle.isClicked(x, y)) {
+                    obstacle.rotate();
+                }
+            });
+        });
+
+        // 게임 초기화
+        createLevel(currentLevel);
+        gameLoop();
+    </script>
+</body>
+</html>

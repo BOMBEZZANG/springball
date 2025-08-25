@@ -1,0 +1,431 @@
+# Game Development Request: Physics Ball Drop - Hyper Casual Mobile Game
+
+## 1. Project Overview
+
+### Game Concept
+**Physics Ball Drop** is a hyper-casual physics puzzle game where players drop a ball from the top of the screen and guide it to reach a goal by rotating obstacles. The game features intuitive one-touch controls and satisfying physics-based gameplay with immediate visual feedback.
+
+### Core Loop
+1. Player taps "DROP" button to release the ball
+2. Tap obstacles to rotate them (45° per tap)
+3. Guide the ball to the star-marked goal
+4. Success → Next level / Failure → Retry
+
+### Target Platform
+- Flutter (iOS & Android)
+- Portrait orientation only
+- Optimized for mobile devices
+
+## 2. Technical Requirements
+
+### Technology Stack
+- **Framework**: Flutter (latest stable version)
+- **Game Engine**: Flame Engine with Forge2D physics
+- **State Management**: Provider or Riverpod
+- **Local Storage**: shared_preferences or Hive
+- **Minimum SDK**: iOS 12.0 / Android API 21
+
+## 3. Game Mechanics
+
+### Physics System
+```
+Ball Properties:
+- Gravity: 0.5
+- Bounce coefficient: 0.7
+- Friction: 0.99
+- Radius: 15 pixels
+- Trail effect: Last 10 positions with fading opacity
+```
+
+
+lib/
+├── main.dart
+├── game/
+│   ├── physics_ball_game.dart (메인 게임 클래스)
+│   ├── config/
+│   │   ├── game_config.dart (전역 설정값)
+│   │   └── level_config.dart (레벨 데이터)
+│   ├── components/
+│   │   ├── ball.dart
+│   │   ├── obstacles/
+│   │   │   ├── base_obstacle.dart (추상 클래스)
+│   │   │   ├── normal_obstacle.dart
+│   │   │   ├── rotating_obstacle.dart
+│   │   │   ├── magnet_obstacle.dart
+│   │   │   ├── trampoline_obstacle.dart
+│   │   │   ├── ice_obstacle.dart
+│   │   │   └── lava_obstacle.dart
+│   │   ├── goal.dart
+│   │   └── particles/
+│   ├── systems/
+│   │   ├── physics_system.dart
+│   │   ├── collision_system.dart
+│   │   └── level_system.dart
+│   ├── screens/
+│   │   ├── game_screen.dart
+│   │   ├── menu_screen.dart
+│   │   └── level_select_screen.dart
+│   └── managers/
+│       ├── game_state_manager.dart
+│       ├── level_manager.dart
+│       └── audio_manager.dart
+├── models/
+│   ├── level_data.dart
+│   └── game_progress.dart
+└── widgets/
+    ├── ui_overlay.dart
+    └── custom_buttons.dart
+
+
+### Obstacle Types
+
+#### 1. Normal Obstacle (Green)
+- **Rotatable**: Yes (45° per tap)
+- **Color**: #4CAF50
+- **Behavior**: Standard collision with bounce
+
+#### 2. Static Obstacle (Red)
+- **Rotatable**: No
+- **Color**: #FF6B6B
+- **Behavior**: Fixed position, standard collision
+
+#### 3. Rotating Obstacle (Purple) 🌀
+- **Rotatable**: No
+- **Color**: #9C27B0
+- **Behavior**: Auto-rotates continuously at 0.02 rad/frame
+- **Visual**: Spinning icon indicator
+
+#### 4. Magnet Obstacle (Blue) 🧲
+- **Rotatable**: Yes
+- **Color**: #2196F3
+- **Behavior**: Attracts ball within 100px radius
+- **Force**: Inverse square law (1 - distance/100) * 0.3
+- **Visual**: Animated magnetic field circles
+
+#### 5. Trampoline Obstacle (Cyan) 🌊
+- **Rotatable**: Yes
+- **Color**: #00BCD4
+- **Behavior**: Bounce multiplier 1.8x, adds upward velocity
+- **Visual**: Pulsing animation, wave pattern
+
+#### 6. Ice Obstacle (White) ❄️
+- **Rotatable**: Yes
+- **Color**: #E0F7FA
+- **Behavior**: Friction becomes 0 on contact
+- **Visual**: Translucent with ice crystal icon
+
+#### 7. Lava Obstacle (Orange) 🔥
+- **Rotatable**: No
+- **Color**: #FF5722
+- **Behavior**: Instant failure on contact
+- **Visual**: Glowing effect with fire particles
+
+### Goal Zone
+- **Radius**: 30 pixels
+- **Visual**: Pulsing green circle with star icon
+- **Effect**: Success triggers particle burst and "PERFECT!" text
+
+## 4. Level Design Specifications
+
+### Prototype Levels (12 Stages)
+
+#### Tutorial Phase (Levels 1-2)
+**Level 1**: Introduction
+```
+- 1x Normal Obstacle at (200, 300)
+- Goal at (200, 450)
+- Teaching: Basic rotation mechanic
+```
+
+**Level 2**: First Special
+```
+- 1x Trampoline at (100, 250)
+- 1x Normal at (300, 350)
+- Goal at (200, 500)
+- Teaching: Trampoline bounce mechanic
+```
+
+#### Basic Combinations (Levels 6-7)
+**Level 6**: Multi-Type Introduction
+```
+- 1x Rotating obstacle at (200, 200)
+- 1x Ice obstacle at (150, 300)
+- 1x Normal at (250, 400)
+- Goal at (300, 500)
+- Teaching: Combining different obstacle types
+```
+
+**Level 7**: Magnet Challenge
+```
+- 2x Magnet obstacles at (100, 250) and (300, 250)
+- 1x Normal at (200, 350)
+- Goal at (200, 500)
+- Teaching: Magnetic field navigation
+```
+
+#### Complex Timing (Levels 11-12)
+**Level 11**: Rotation Sync
+```
+- 2x Rotating obstacles at different speeds
+- 1x Trampoline at (200, 400)
+- 1x Static obstacle creating narrow path
+- Goal at (100, 500)
+- Challenge: Timing ball drop with rotations
+```
+
+**Level 12**: Ice Slide Precision
+```
+- Series of 3x Ice obstacles creating slide path
+- 1x Lava obstacle as hazard
+- 1x Normal for path correction
+- Goal at (350, 500)
+- Challenge: Controlling momentum on ice
+```
+
+#### Multi-Ball Mechanics (Levels 16-17)
+**Level 16**: Sequential Solution
+```
+- Setup requiring 2 ball drops
+- First ball triggers path for second
+- Mix of Normal and Trampoline obstacles
+- Goal at (200, 500)
+- New mechanic: Multiple attempts strategy
+```
+
+**Level 17**: Chain Reaction
+```
+- Domino-style obstacle arrangement
+- Rotating obstacles that affect each other
+- 1x Magnet creating curved paths
+- Goal at (300, 500)
+- Challenge: Setting up chain reactions
+```
+
+#### Precision Control (Levels 21-22)
+**Level 21**: Narrow Margins
+```
+- Very tight passages between obstacles
+- 2x Lava obstacles as boundaries
+- Precise rotation angles required
+- Goal at (200, 500)
+- Challenge: Pixel-perfect rotations
+```
+
+**Level 22**: Magnetic Maze
+```
+- 3x Magnets creating complex field
+- Ice obstacles for momentum
+- Narrow goal entrance
+- Goal at (150, 500)
+- Challenge: Understanding combined physics
+```
+
+#### Master Challenge (Levels 26-27)
+**Level 26**: The Gauntlet
+```
+- All 7 obstacle types present
+- Complex timing requirements
+- Multiple solution paths
+- Goal at (200, 550)
+- Challenge: Mastery of all mechanics
+```
+
+**Level 27**: Precision Paradise
+```
+- Minimal margin for error
+- 4x Lava obstacles as boundaries
+- Rotating + Magnet + Ice combination
+- Moving goal (slight oscillation)
+- Goal at (varies, 500)
+- Challenge: Frame-perfect execution
+```
+
+## 5. UI/UX Requirements
+
+### Main Game Screen
+```
+- Canvas: 400x600 logical pixels
+- Background: Gradient (#1e3c72 to #2a5298)
+- Grid pattern overlay (40px squares, 5% opacity)
+```
+
+### UI Elements
+1. **Top Bar**
+   - Level indicator (e.g., "Level 1")
+   - Score display
+   - Reset button
+
+2. **Bottom Section**
+   - DROP button (prominent, animated)
+   - Obstacle type legend (icons)
+
+3. **Visual Effects**
+   - Particle systems for success/failure
+   - Trail effect on ball movement
+   - Glow effects on special obstacles
+   - Screen shake on collision (subtle)
+
+### Animations
+```
+Success Effect:
+- "PERFECT!" text animation
+- Particle burst (20 particles)
+- Score increment animation
+- 1.5s delay before next level
+
+Failure Effect:
+- "FAILED!" or "BURNED!" text
+- Red particle burst
+- Immediate retry option
+```
+
+## 6. Data Structure
+
+### Level Data Model
+```json
+{
+  "levelId": 1,
+  "par": 3,
+  "obstacles": [
+    {
+      "type": "normal|static|rotating|magnet|trampoline|ice|lava",
+      "position": {"x": 200, "y": 300},
+      "size": {"width": 150, "height": 20},
+      "initialRotation": 0,
+      "properties": {
+        "rotationSpeed": 0.02,  // for rotating type
+        "magnetForce": 100,     // for magnet type
+        "bounceMultiplier": 1.8 // for trampoline
+      }
+    }
+  ],
+  "goal": {
+    "position": {"x": 200, "y": 450},
+    "radius": 30
+  },
+  "ballStart": {"x": 200, "y": 50}
+}
+```
+
+### Save Data Structure
+```json
+{
+  "currentLevel": 1,
+  "highestLevel": 1,
+  "totalScore": 0,
+  "levelScores": {
+    "1": {"score": 100, "attempts": 3, "completed": true}
+  },
+  "settings": {
+    "soundEnabled": true,
+    "hapticEnabled": true
+  }
+}
+```
+
+###
+
+Code Architecture and Modularity
+Deepened Architecture:
+The 
+
+lib/ directory structure is a solid foundation. The following object-oriented principles will be applied to enhance modularity and maintainability:
+
+Inheritance and Polymorphism:
+
+A single BaseObstacle abstract class will be created to define common properties and methods (e.g., update(), draw()).
+
+Specific obstacle types (e.g., NormalObstacle, LavaObstacle) will inherit from BaseObstacle, overriding methods to implement their unique behaviors. This approach minimizes code duplication and improves scalability.
+
+System Separation:
+
+Separate logic into distinct systems: PhysicsSystem for Forge2D integration, CollisionSystem for handling collision events and their effects, and a new InputSystem to manage all user touch and tap events, ensuring a clean separation of concerns.
+
+Singleton Pattern:
+
+Apply the singleton pattern to manager classes like LevelManager and AudioManager. This ensures that a single instance of these classes exists throughout the game, providing a global access p
+
+
+
+## 7. Performance Requirements
+
+- Maintain 60 FPS on mid-range devices
+- Maximum 100 physics bodies per level
+- Particle limit: 50 concurrent particles
+- Memory usage: < 150MB
+- Load time: < 2 seconds per level
+
+## 8. Visual Assets Required
+
+### Sprites/Icons
+- Ball (with glow effect)
+- Star icon for goal
+- Obstacle type icons (🌀🧲🌊❄️🔥)
+- UI buttons and panels
+
+### Colors Palette
+```
+Primary: #1e3c72, #2a5298
+Success: #4CAF50
+Failure: #FF5252
+Gold/Ball: #FFD700
+Ice: #E0F7FA
+Lava: #FF5722
+Magnet: #2196F3
+Trampoline: #00BCD4
+```
+
+## 9. Audio Requirements (Optional for Prototype)
+- Ball bounce sound
+- Rotation click sound
+- Success fanfare
+- Failure sound
+- Background ambient music
+
+## 10. Reference Implementation
+
+A working HTML5/JavaScript prototype is provided as reference for physics behavior and visual effects. The Flutter implementation should match or exceed the game feel of this prototype while leveraging native mobile capabilities like haptic feedback.
+
+**Key files provided:**
+- `prototype.html` - Complete working game
+- Physics constants and formulas included in code comments
+- Visual effect implementations
+
+## 11. Development Milestones
+
+### Phase 1: Core Mechanics (Week 1)
+- Basic game loop
+- Ball physics
+- Normal and Static obstacles
+- Collision detection
+- Level loading system
+
+### Phase 2: Special Obstacles (Week 2)
+- Implement all 7 obstacle types
+- Particle effects
+- Visual feedback systems
+
+### Phase 3: Levels & Polish (Week 3)
+- Implement all 12 levels
+- Save/load system
+- UI polish
+- Performance optimization
+
+## 12. Testing Requirements
+
+- Test on various screen sizes (4.7" to 6.7")
+- Ensure obstacles are always tappable (minimum 44x44pt hit area)
+- Verify physics consistency across different frame rates
+- Test level completion paths (each level must have at least one solution)
+
+## 13. Success Criteria
+
+- All 12 levels playable and completable
+- Smooth physics at 60 FPS
+- Satisfying visual and haptic feedback
+- Local progress saving working correctly
+- Intuitive controls with no tutorial needed beyond level 1
+
+---
+
+**Note**: This is a prototype for testing game mechanics and user engagement. Focus on core gameplay polish over additional features. The provided HTML/JS reference demonstrates the expected physics behavior and visual style.
